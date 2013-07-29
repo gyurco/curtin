@@ -1,0 +1,21 @@
+#!/bin/bash
+
+pycheck_dirs=( "curtin/" "tests/" )
+bin_files=( "bin/curtin" )
+CR="
+"
+
+
+set -f
+if [ $# -eq 0 ]; then
+   IFS="$CR"
+   files=( "${bin_files[@]}" "${pycheck_dirs[@]}" )
+   unset IFS
+else
+   files=( "$@" )
+fi
+
+myname=${0##*/}
+cmd=( "${myname#run-}" "${files[@]}" )
+echo "Running: " "${cmd[@]}" 1>&2
+exec "${cmd[@]}"
