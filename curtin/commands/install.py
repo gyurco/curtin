@@ -29,9 +29,13 @@ from . import populate_one_subcmd
 
 CONFIG_BUILTIN = {
     'sources': {},
-    'stages': ['early', 'partitioning', 'network', 'extract', 'hook', 'final'],
+    'stages': ['early', 'partitioning', 'network', 'extract', 'curthooks',
+               'hook', 'late'],
     'extract_commands': {'builtin': ['curtin', 'extract']},
-    'hook_commands': {'builtin': ['curtin', 'hook']}
+    'hook_commands': {'builtin': ['curtin', 'hook']},
+    'partitioning_commands': {'builtin': ['curtin', 'block-meta', 'simple']},
+    'curthooks_commands': {'builtin': ['curtin', 'curthooks']},
+    'late_commands': {'builtin': []},
 }
 
 
@@ -87,6 +91,8 @@ class Stage(object):
     def run(self):
         for cmdname in sorted(self.commands.keys()):
             cmd = self.commands[cmdname]
+            if not cmd:
+                continue
             shell = not isinstance(cmd, list)
             with util.LogTimer(LOG.debug, cmdname):
                 try:
@@ -112,6 +118,9 @@ def cmd_install(args):
     if not len(cfg.get('sources', [])):
         raise util.BadUsage("no sources provided to install")
 
+    if cfg.get('http_proxy'):
+        os.environ['http_proxy'] = cfg['http_proxy']
+
     try:
         workingd = WorkingDir(cfg)
         LOG.debug(workingd.env())
@@ -130,6 +139,9 @@ def cmd_install(args):
             util.do_umount(os.path.join(workingd.target, d))
         util.do_umount(workingd.target)
         shutil.rmtree(workingd.top)
+
+    LOG.info("Finished installation")
+    print("Installation finished")
 
 
 CMD_ARGUMENTS = (
