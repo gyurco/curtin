@@ -14,7 +14,7 @@ EOF
 }
 
 print_commit() {
-    local subject="$1" author="$2" bugs="$3" aname="" buf="" abugs=""
+    local subject="$1" author="$2" bugs="$3" aname="" abugs=""
     local indent="    - " indent2="      " ll=79
     aname=${author% <*}
     [ "${aname}" = "Scott Moser" ] && aname=""
@@ -81,29 +81,8 @@ prev_pkg_ver=$(dpkg-parsechangelog --show-field Version) ||
 pkg_name=$(dpkg-parsechangelog --show-field Source) ||
    fail "failed to read Source from changelog"
 
-# turn 0.7.7-10-gbc2c326-0ubuntu1 into 'bc2c326'
-t=${prev_pkg_ver%-*}
-prev_pkg_hash=${t##*-g}
-case "${prev_pkg_ver}" in
-    *-*-g[a-z]*-*)
-        # use the hash.
-        t=${prev_pkg_ver%-*}
-        prev_pkg_hash=${t##*-g};;
-    *)
-        prev_tag=ubuntu/$(echo "${prev_pkg_ver}" | sed 's,~,_,g')
-        echo "prev_tag=$prev_tag"
-        out=$(git tag --list "${prev_tag}") ||
-            fail "failed to look for a tag $prev_tag"
-        if [ -z "$out" ]; then
-            fail "no way to figure out merge-base between " \
-                "${prev_pkg_ver} and ${from_ref}"
-        fi
-        prev_pkg_hash=$(git merge-base "${from_ref}" "$prev_tag") ||
-            fail "failed git merge-base \"${from_ref}\" \"${prev_tag}\""
-        [ -n "${prev_pkg_hash}" ] ||
-            fail "cannot find merge base for ${prev_pkg_ver} and ${from_ref}"
-        ;;
-esac
+merge_base=$(git merge-base "$from_ref" HEAD) ||
+    fail "cannot find merge base for $from_ref and HEAD"
 
 new_pkg_debian="0ubuntu1"
 new_upstream_ver=$(git describe --abbrev=8 "${from_ref}")
@@ -155,8 +134,8 @@ clog="${TEMP_D}/changelog"
 gitlog="${TEMP_D}/gitlog"
 
 git log --first-parent --no-decorate --format=full \
-   "${prev_pkg_hash}..${from_ref}" >  "$gitlog" ||
-   fail "failed git log ${prev_pkg_hash}..${from_ref}"
+   "${merge_base}..${from_ref}" >  "$gitlog" ||
+   fail "failed git log ${merge_base}..${from_ref}"
 
 cat >> "$clog" <<EOF
 $pkg_name ($new_pkg_ver) UNRELEASED; urgency=medium
