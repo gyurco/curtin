@@ -16,6 +16,7 @@ class TestUefiReuseEspAbs(TestBasicAbs):
         self.assertEqual(1, len(distro_lines))
 
 
+@TestUefiReuseEspAbs.skip_by_date("1881030", fixby="2020-07-15")
 class Cent70TestUefiReuseEsp(cent_rbase.centos70_bionic, TestUefiReuseEspAbs):
     __test__ = True
 
@@ -28,15 +29,6 @@ class XenialGATestUefiReuseEsp(relbase.xenial_ga, TestUefiReuseEspAbs):
 class BionicTestUefiReuseEsp(relbase.bionic, TestUefiReuseEspAbs):
     __test__ = True
 
-    @TestUefiReuseEspAbs.skip_by_date("1863015", fixby="2020-04-15")
-    def test_efiboot_menu_has_one_distro_entry(self):
-        return super().test_efiboot_menu_has_one_distro_entry()
-
-
-class EoanTestUefiReuseEsp(relbase.eoan, TestUefiReuseEspAbs):
-    __test__ = True
-
-    @TestUefiReuseEspAbs.skip_by_date("1863015", fixby="2020-04-15")
     def test_efiboot_menu_has_one_distro_entry(self):
         return super().test_efiboot_menu_has_one_distro_entry()
 
@@ -44,7 +36,13 @@ class EoanTestUefiReuseEsp(relbase.eoan, TestUefiReuseEspAbs):
 class FocalTestUefiReuseEsp(relbase.focal, TestUefiReuseEspAbs):
     __test__ = True
 
-    @TestUefiReuseEspAbs.skip_by_date("1863015", fixby="2020-04-15")
+    def test_efiboot_menu_has_one_distro_entry(self):
+        return super().test_efiboot_menu_has_one_distro_entry()
+
+
+class GroovyTestUefiReuseEsp(relbase.groovy, TestUefiReuseEspAbs):
+    __test__ = True
+
     def test_efiboot_menu_has_one_distro_entry(self):
         return super().test_efiboot_menu_has_one_distro_entry()
 

@@ -53,7 +53,7 @@ class BionicTestNetworkIPV6(relbase.bionic, TestNetworkIPV6Abs):
     __test__ = True
 
 
-class EoanTestNetworkIPV6(relbase.eoan, TestNetworkIPV6Abs):
+class GroovyTestNetworkIPV6(relbase.groovy, TestNetworkIPV6Abs):
     __test__ = True
 
 
