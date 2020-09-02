@@ -26,6 +26,7 @@ from curtin.log import LOG
 
 NOSPARE_RAID_LEVELS = [
     'linear', 'raid0', '0', 0,
+    'container'
 ]
 
 SPARE_RAID_LEVELS = [
@@ -145,7 +146,7 @@ def mdadm_assemble(md_devname=None, devices=[], spares=[], scan=False,
     udev.udevadm_settle()
 
 
-def mdadm_create(md_devname, raidlevel, devices, spares=None, md_name="",
+def mdadm_create(md_devname, raidlevel, devices, spares=None, container_devcnt=None, md_name="",
                  metadata=None):
     LOG.debug('mdadm_create: ' +
               'md_name=%s raidlevel=%s ' % (md_devname, raidlevel) +
@@ -159,8 +160,9 @@ def mdadm_create(md_devname, raidlevel, devices, spares=None, md_name="",
         raise ValueError('Invalid raidlevel: [{}]'.format(raidlevel))
 
     min_devices = md_minimum_devices(raidlevel)
-    if len(devices) < min_devices:
-        err = 'Not enough devices for raidlevel: ' + str(raidlevel)
+    devcnt = len(devices) if not container_devcnt else container_devcnt
+    if devcnt < min_devices:
+        err = 'Not enough devices (' + str(devcnt) + ') for raidlevel: ' + str(raidlevel)
         err += ' minimum devices needed: ' + str(min_devices)
         raise ValueError(err)
 
@@ -171,19 +173,25 @@ def mdadm_create(md_devname, raidlevel, devices, spares=None, md_name="",
     (hostname, _err) = util.subp(["hostname", "-s"], rcs=[0], capture=True)
 
     cmd = ["mdadm", "--create", md_devname, "--run",
-           "--metadata=%s" % metadata,
            "--homehost=%s" % hostname.strip(),
-           "--level=%s" % raidlevel,
-           "--raid-devices=%s" % len(devices)]
+           "--raid-devices=%s" % devcnt]
+
+    if raidlevel == 'container' or not container_devcnt:
+        cmd.append("--metadata=%s" % metadata)
+    if raidlevel != 'container':
+        cmd.append("--level=%s" % raidlevel)
+
     if md_name:
         cmd.append("--name=%s" % md_name)
 
     for device in devices:
-        holders = get_holders(device)
-        if len(holders) > 0:
-            LOG.warning('Detected holders during mdadm creation: %s', holders)
-            raise OSError('Failed to remove holders from %s', device)
-        zero_device(device)
+        if not container_devcnt:
+            # clear non-container devices
+            holders = get_holders(device)
+            if len(holders) > 0:
+                LOG.warning('Detected holders during mdadm creation: %s', holders)
+                raise OSError('Failed to remove holders from %s', device)
+            zero_device(device)
         cmd.append(device)
 
     if spares:
@@ -508,7 +516,7 @@ def md_sysfs_attr(md_devname, attrname):
 
 
 def md_raidlevel_short(raidlevel):
-    if isinstance(raidlevel, int) or raidlevel in ['linear', 'stripe']:
+    if isinstance(raidlevel, int) or raidlevel in ['linear', 'stripe', 'container']:
         return raidlevel
 
     return int(raidlevel.replace('raid', ''))
@@ -517,7 +525,7 @@ def md_raidlevel_short(raidlevel):
 def md_minimum_devices(raidlevel):
     ''' return the minimum number of devices for a given raid level '''
     rl = md_raidlevel_short(raidlevel)
-    if rl in [0, 1, 'linear', 'stripe']:
+    if rl in [0, 1, 'linear', 'stripe', 'container']:
         return 2
     if rl in [5]:
         return 3
