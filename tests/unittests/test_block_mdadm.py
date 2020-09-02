@@ -120,10 +120,12 @@ class TestBlockMdadmCreate(CiTestCase):
         side_effects.append(("", ""))  # mdadm create
         # build command how mdadm_create does
         cmd = (["mdadm", "--create", md_devname, "--run",
-                "--metadata=%s" % metadata,
-                "--homehost=%s" % hostname, "--level=%s" % raidlevel,
-                "--raid-devices=%s" % len(devices)] +
-               devices)
+                "--homehost=%s" % hostname,
+                "--raid-devices=%s" % len(devices),
+                "--metadata=%s" % metadata])
+        if raidlevel != 'container':
+            cmd += ["--level=%s" % raidlevel]
+        cmd += devices
         if spares:
             cmd += ["--spare-devices=%s" % len(spares)] + spares
 
@@ -228,6 +230,22 @@ class TestBlockMdadmCreate(CiTestCase):
                            devices=devices, spares=spares)
         self.mock_util.subp.assert_has_calls(expected_calls)
 
+    def test_mdadm_create_imsm_container(self):
+        md_devname = "/dev/md/imsm"
+        raidlevel = 'container'
+        devices = ['/dev/nvme0n1', '/dev/nvme1n1', '/dev/nvme2n1']
+        metadata = 'imsm'
+        spares = []
+        (side_effects, expected_calls) = self.prepare_mock(md_devname,
+                                                           raidlevel,
+                                                           devices,
+                                                           spares,
+                                                           metadata)
+
+        self.mock_util.subp.side_effect = side_effects
+        mdadm.mdadm_create(md_devname=md_devname, raidlevel=raidlevel,
+                           devices=devices, spares=spares, metadata=metadata)
+        self.mock_util.subp.assert_has_calls(expected_calls)
 
 class TestBlockMdadmExamine(CiTestCase):
     def setUp(self):
