@@ -333,6 +333,70 @@ class TestBlockMdadmExamine(CiTestCase):
         self.mock_util.subp.assert_has_calls(expected_calls)
         self.assertEqual(data, {})
 
+    def test_mdadm_examine_no_export_imsm(self):
+        self.mock_util.subp.return_value = ("""/dev/nvme0n1:
+          Magic : Intel Raid ISM Cfg Sig.
+        Version : 1.3.00
+    Orig Family : 6f8c68e3
+         Family : 6f8c68e3
+     Generation : 00000112
+     Attributes : All supported
+           UUID : 7ec12162:ee5cd20b:0ac8b069:cfbd93ec
+       Checksum : 4a5cebe2 correct
+    MPB Sectors : 2
+          Disks : 4
+   RAID Devices : 1
+
+  Disk03 Serial : LJ910504Q41P0FGN
+          State : active
+             Id : 00000000
+    Usable Size : 1953514766 (931.51 GiB 1000.20 GB)
+
+[126]:
+           UUID : f9792759:7f61d0c7:e7313d5a:2e7c2e22
+     RAID Level : 5
+        Members : 4
+          Slots : [UUUU]
+    Failed disk : none
+      This Slot : 3
+    Sector Size : 512
+     Array Size : 5860540416 (2794.52 GiB 3000.60 GB)
+   Per Dev Size : 1953515520 (931.51 GiB 1000.20 GB)
+  Sector Offset : 0
+    Num Stripes : 7630912
+     Chunk Size : 128 KiB
+       Reserved : 0
+  Migrate State : idle
+      Map State : normal
+    Dirty State : dirty
+     RWH Policy : off
+
+  Disk00 Serial : LJ91040H2Y1P0FGN
+          State : active
+             Id : 00000003
+    Usable Size : 1953514766 (931.51 GiB 1000.20 GB)
+
+  Disk01 Serial : LJ916308CZ1P0FGN
+          State : active
+             Id : 00000002
+    Usable Size : 1953514766 (931.51 GiB 1000.20 GB)
+
+  Disk02 Serial : LJ916308RF1P0FGN
+          State : active
+             Id : 00000001
+    Usable Size : 1953514766 (931.51 GiB 1000.20 GB)
+        """, "")   # mdadm --examine /dev/nvme0n1
+
+        device = "/dev/nvme0n1"
+        data = mdadm.mdadm_examine(device, export=False)
+
+        expected_calls = [
+            call(["mdadm", "--examine", device], capture=True),
+        ]
+        self.mock_util.subp.assert_has_calls(expected_calls)
+        self.assertEqual(data['uuid'],
+                         '7ec12162:ee5cd20b:0ac8b069:cfbd93ec')
+
 
 class TestBlockMdadmStop(CiTestCase):
     def setUp(self):
