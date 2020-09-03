@@ -611,6 +611,11 @@ def __mdadm_detail_to_dict(input):
     # start after the first newline
     remainder = input[input.find('\n')+1:]
 
+    # keep only the first section (imsm)
+    arraysection = remainder.find('\n[');
+    if arraysection != -1:
+        remainder = remainder[:arraysection]
+
     #  FIXME: probably could do a better regex to match the LHS which
     #         has one, two or three words
     rem = r'(\w+|\w+\ \w+|\w+\ \w+\ \w+)\ \:\ ([a-zA-Z0-9\-\.,: \(\)=\']+)'
