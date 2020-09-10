@@ -238,7 +238,7 @@ class TestClearHolders(CiTestCase):
         mock_mdadm.md_present.return_value = False
         mock_mdadm.md_get_devices_list.return_value = devices
         mock_mdadm.md_get_spares_list.return_value = spares
-        mock_mdadm.mdadm_query_detail.return_value = {}
+        mock_mdadm.md_is_container.return_value = None
 
         clear_holders.shutdown_mdadm(self.test_syspath)
 

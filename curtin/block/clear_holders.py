@@ -165,11 +165,10 @@ def shutdown_mdadm(device):
     """
 
     blockdev = block.sysfs_to_devpath(device)
-    query = mdadm.mdadm_query_detail(blockdev)
 
-    if query.get('MD_CONTAINER'):
+    if mdadm.md_is_container(blockdev):
         LOG.info('Array is in a container, skip discovering raid devices and spares for %s', device)
-        md_devs = ()
+        md_devs = []
     else:
         LOG.info('Discovering raid devices and spares for %s', device)
         md_devs = (
@@ -192,7 +191,7 @@ def shutdown_mdadm(device):
         LOG.debug('Non-fatal error writing to array device %s, '
                   'proceeding with shutdown: %s', blockdev, e)
 
-    LOG.info('Removing raid array members: ', md_devs)
+    LOG.info('Removing raid array members: %s', md_devs)
     for mddev in md_devs:
         try:
             mdadm.fail_device(blockdev, mddev)
@@ -204,7 +203,7 @@ def shutdown_mdadm(device):
     LOG.debug('using mdadm.mdadm_stop on dev: %s', blockdev)
     mdadm.mdadm_stop(blockdev)
 
-    LOG.debug('Wiping mdadm member devices: ', md_devs)
+    LOG.debug('Wiping mdadm member devices: %s', md_devs)
     for mddev in md_devs:
         mdadm.zero_device(mddev, force=True)
 

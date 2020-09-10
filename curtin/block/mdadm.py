@@ -358,7 +358,6 @@ def mdadm_remove(devpath):
                          rcs=[0], capture=True)
     LOG.debug("mdadm remove:\n%s\n%s", out, err)
 
-
 def fail_device(mddev, arraydev):
     assert_valid_devpath(mddev)
 
@@ -849,5 +848,9 @@ def md_check(md_devname, raidlevel, devices=[], spares=[]):
 
     LOG.debug('RAID array OK: ' + md_devname)
     return True
+
+def md_is_container(md_devname):
+    md_query = mdadm_query_detail(md_devname)
+    return md_query.get('MD_CONTAINER', None)
 
 # vi: ts=4 expandtab syntax=python

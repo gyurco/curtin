@@ -1253,6 +1253,62 @@ class TestBlockMdadmMdHelpers(CiTestCase):
         self.assertFalse(md_is_present)
         self.mock_util.load_file.assert_called_with('/proc/mdstat')
 
+    def test_md_is_container_false(self):
+        self.mock_util.subp.return_value = (
+            """
+            MD_LEVEL=raid1
+            MD_DEVICES=2
+            MD_METADATA=1.2
+            MD_UUID=93a73e10:427f280b:b7076c02:204b8f7a
+            MD_NAME=wily-foobar:0
+            MD_DEVICE_vdc_ROLE=0
+            MD_DEVICE_vdc_DEV=/dev/vdc
+            MD_DEVICE_vdd_ROLE=1
+            MD_DEVICE_vdd_DEV=/dev/vdd
+            MD_DEVICE_vde_ROLE=spare
+            MD_DEVICE_vde_DEV=/dev/vde
+            """, "")
+
+        device = "/dev/md0"
+        self.mock_valid.return_value = True
+        is_container = mdadm.md_is_container(device)
+
+        expected_calls = [
+            call(["mdadm", "--query", "--detail", "--export", device],
+                 capture=True),
+        ]
+        self.mock_util.subp.assert_has_calls(expected_calls)
+        self.assertEqual(is_container, None)
+
+    def test_md_is_container_true(self):
+        self.mock_util.subp.return_value = (
+            """
+            MD_LEVEL=raid5
+            MD_DEVICES=4
+            MD_CONTAINER=/dev/md/imsm0
+            MD_MEMBER=0
+            MD_UUID=5fa06b36:53e67142:37ff9ad6:44ef0e89
+            MD_DEVNAME=126
+            MD_DEVICE_ev_nvme2n1_ROLE=3
+            MD_DEVICE_ev_nvme2n1_DEV=/dev/nvme2n1
+            MD_DEVICE_ev_nvme1n1_ROLE=0
+            MD_DEVICE_ev_nvme1n1_DEV=/dev/nvme1n1
+            MD_DEVICE_ev_nvme0n1_ROLE=1
+            MD_DEVICE_ev_nvme0n1_DEV=/dev/nvme0n1
+            MD_DEVICE_ev_nvme3n1_ROLE=2
+            MD_DEVICE_ev_nvme3n1_DEV=/dev/nvme3n1
+            """, "")
+
+        device = "/dev/md0"
+        self.mock_valid.return_value = True
+        is_container = mdadm.md_is_container(device)
+
+        expected_calls = [
+            call(["mdadm", "--query", "--detail", "--export", device],
+                 capture=True),
+        ]
+        self.mock_util.subp.assert_has_calls(expected_calls)
+        self.assertEqual(is_container, "/dev/md/imsm0")
 
 class TestBlockMdadmZeroDevice(CiTestCase):
 
@@ -1325,6 +1381,4 @@ class TestBlockMdadmZeroDevice(CiTestCase):
         self.mock_examine.assert_called_with(device, export=False)
         self.m_zero.assert_called_with(device, expected_offsets,
                                        buflen=1024, count=1024, strict=True)
-
-
 # vi: ts=4 expandtab syntax=python
