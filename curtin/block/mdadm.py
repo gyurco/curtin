@@ -611,7 +611,7 @@ def __mdadm_detail_to_dict(input):
     # start after the first newline
     remainder = input[input.find('\n')+1:]
 
-    # keep only the first section (imsm)
+    # keep only the first section (imsm container)
     arraysection = remainder.find('\n[');
     if arraysection != -1:
         remainder = remainder[:arraysection]
