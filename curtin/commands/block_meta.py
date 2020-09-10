@@ -1500,13 +1500,10 @@ def raid_handler(info, storage_config):
 
     LOG.debug('raid: cfg: %s', util.json_dumps(info))
 
-    devcnt = None
+    container_dev = None
+    device_paths = []
     if container:
-        parent = storage_config.get(container)
-        if not parent:
-            raise ValueError("container with id '%s' not found" % parant)
-        device_paths = [parent.get('name')]
-        devcnt = len(parent.get('devices'))
+        container_dev = get_path_to_storage_volume(container, storage_config)
     else:
         device_paths = list(get_path_to_storage_volume(dev, storage_config) for
                     dev in devices)
@@ -1528,7 +1525,7 @@ def raid_handler(info, storage_config):
 
     if create_raid:
         mdadm.mdadm_create(md_devname, raidlevel,
-                           device_paths, spare_device_paths, devcnt,
+                           device_paths, spare_device_paths, container_dev,
                            info.get('mdname', ''), metadata)
 
     wipe_mode = info.get('wipe')

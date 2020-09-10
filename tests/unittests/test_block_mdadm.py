@@ -97,7 +97,7 @@ class TestBlockMdadmCreate(CiTestCase):
         self.mock_holders.return_value = []
 
     def prepare_mock(self, md_devname, raidlevel, devices, spares,
-                     metadata=None):
+                     container=None, metadata=None):
         side_effects = []
         expected_calls = []
         hostname = 'ubuntu'
@@ -121,10 +121,13 @@ class TestBlockMdadmCreate(CiTestCase):
         # build command how mdadm_create does
         cmd = (["mdadm", "--create", md_devname, "--run",
                 "--homehost=%s" % hostname,
-                "--raid-devices=%s" % len(devices),
-                "--metadata=%s" % metadata])
+                "--raid-devices=%s" % (len(devices) if not container else 4)])
+        if not container:
+            cmd += ["--metadata=%s" % metadata]
         if raidlevel != 'container':
             cmd += ["--level=%s" % raidlevel]
+        if container:
+            cmd += [container]
         cmd += devices
         if spares:
             cmd += ["--spare-devices=%s" % len(spares)] + spares
@@ -240,11 +243,35 @@ class TestBlockMdadmCreate(CiTestCase):
                                                            raidlevel,
                                                            devices,
                                                            spares,
+                                                           None,
                                                            metadata)
 
         self.mock_util.subp.side_effect = side_effects
         mdadm.mdadm_create(md_devname=md_devname, raidlevel=raidlevel,
                            devices=devices, spares=spares, metadata=metadata)
+        self.mock_util.subp.assert_has_calls(expected_calls)
+
+    @patch("curtin.block._md_get_members_list")
+    def test_mdadm_create_array_in_imsm_container(self, mock_get_members):
+        md_devname = "/dev/md126"
+        raidlevel = 5
+        devices = []
+        metadata = 'imsm'
+        spares = []
+        container = "/dev/md/imsm"
+        (side_effects, expected_calls) = self.prepare_mock(md_devname,
+                                                           raidlevel,
+                                                           devices,
+                                                           spares,
+                                                           container,
+                                                           metadata)
+
+        self.mock_util.subp.side_effect = side_effects
+        mock_get_members.return_value = [
+            '/dev/nvme0n1', '/dev/nvme1n1', '/dev/nvme2n1', '/dev/nvme3n1'
+        ]
+        mdadm.mdadm_create(md_devname=md_devname, raidlevel=raidlevel,
+                           devices=devices, spares=spares, container=container, metadata=metadata)
         self.mock_util.subp.assert_has_calls(expected_calls)
 
 class TestBlockMdadmExamine(CiTestCase):

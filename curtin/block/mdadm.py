@@ -146,7 +146,7 @@ def mdadm_assemble(md_devname=None, devices=[], spares=[], scan=False,
     udev.udevadm_settle()
 
 
-def mdadm_create(md_devname, raidlevel, devices, spares=None, container_devcnt=None, md_name="",
+def mdadm_create(md_devname, raidlevel, devices, spares=None, container=None, md_name="",
                  metadata=None):
     LOG.debug('mdadm_create: ' +
               'md_name=%s raidlevel=%s ' % (md_devname, raidlevel) +
@@ -160,7 +160,7 @@ def mdadm_create(md_devname, raidlevel, devices, spares=None, container_devcnt=N
         raise ValueError('Invalid raidlevel: [{}]'.format(raidlevel))
 
     min_devices = md_minimum_devices(raidlevel)
-    devcnt = len(devices) if not container_devcnt else container_devcnt
+    devcnt = len(devices) if not container else len(md_get_devices_list(container))
     if devcnt < min_devices:
         err = 'Not enough devices (' + str(devcnt) + ') for raidlevel: ' + str(raidlevel)
         err += ' minimum devices needed: ' + str(min_devices)
@@ -176,7 +176,7 @@ def mdadm_create(md_devname, raidlevel, devices, spares=None, container_devcnt=N
            "--homehost=%s" % hostname.strip(),
            "--raid-devices=%s" % devcnt]
 
-    if raidlevel == 'container' or not container_devcnt:
+    if not container:
         cmd.append("--metadata=%s" % metadata)
     if raidlevel != 'container':
         cmd.append("--level=%s" % raidlevel)
@@ -184,14 +184,15 @@ def mdadm_create(md_devname, raidlevel, devices, spares=None, container_devcnt=N
     if md_name:
         cmd.append("--name=%s" % md_name)
 
+    if container:
+        cmd.append(container)
+
     for device in devices:
-        if not container_devcnt:
-            # clear non-container devices
-            holders = get_holders(device)
-            if len(holders) > 0:
-                LOG.warning('Detected holders during mdadm creation: %s', holders)
-                raise OSError('Failed to remove holders from %s', device)
-            zero_device(device)
+        holders = get_holders(device)
+        if len(holders) > 0:
+            LOG.warning('Detected holders during mdadm creation: %s', holders)
+            raise OSError('Failed to remove holders from %s', device)
+        zero_device(device)
         cmd.append(device)
 
     if spares:
