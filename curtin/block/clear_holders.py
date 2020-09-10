@@ -203,7 +203,7 @@ def shutdown_mdadm(device):
     LOG.debug('using mdadm.mdadm_stop on dev: %s', blockdev)
     mdadm.mdadm_stop(blockdev)
 
-    LOG.debug('Wiping mdadm member devices: %s', md_devs)
+    LOG.debug('Wiping mdadm member devices: %s' % md_devs)
     for mddev in md_devs:
         mdadm.zero_device(mddev, force=True)
 
