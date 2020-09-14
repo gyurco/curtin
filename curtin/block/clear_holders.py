@@ -166,7 +166,7 @@ def shutdown_mdadm(device):
 
     blockdev = block.sysfs_to_devpath(device)
 
-    if mdadm.md_is_container(blockdev):
+    if mdadm.md_is_in_container(blockdev):
         LOG.info('Array is in a container, skip discovering raid devices and spares for %s', device)
         md_devs = []
     else:

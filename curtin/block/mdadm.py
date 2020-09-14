@@ -850,8 +850,7 @@ def md_check(md_devname, raidlevel, devices=[], spares=[]):
     LOG.debug('RAID array OK: ' + md_devname)
     return True
 
-def md_is_container(md_devname):
-    md_query = mdadm_query_detail(md_devname)
-    return md_query.get('MD_CONTAINER', None)
+def md_is_in_container(md_devname):
+    return 'MD_CONTAINER' in mdadm_query_detail(md_devname)
 
 # vi: ts=4 expandtab syntax=python

@@ -1280,7 +1280,7 @@ class TestBlockMdadmMdHelpers(CiTestCase):
         self.assertFalse(md_is_present)
         self.mock_util.load_file.assert_called_with('/proc/mdstat')
 
-    def test_md_is_container_false(self):
+    def test_md_is_in_container_false(self):
         self.mock_util.subp.return_value = (
             """
             MD_LEVEL=raid1
@@ -1298,16 +1298,16 @@ class TestBlockMdadmMdHelpers(CiTestCase):
 
         device = "/dev/md0"
         self.mock_valid.return_value = True
-        is_container = mdadm.md_is_container(device)
+        is_in_container = mdadm.md_is_in_container(device)
 
         expected_calls = [
             call(["mdadm", "--query", "--detail", "--export", device],
                  capture=True),
         ]
         self.mock_util.subp.assert_has_calls(expected_calls)
-        self.assertEqual(is_container, None)
+        self.assertEqual(is_in_container, False)
 
-    def test_md_is_container_true(self):
+    def test_md_is_in_container_true(self):
         self.mock_util.subp.return_value = (
             """
             MD_LEVEL=raid5
@@ -1328,14 +1328,14 @@ class TestBlockMdadmMdHelpers(CiTestCase):
 
         device = "/dev/md0"
         self.mock_valid.return_value = True
-        is_container = mdadm.md_is_container(device)
+        is_in_container = mdadm.md_is_in_container(device)
 
         expected_calls = [
             call(["mdadm", "--query", "--detail", "--export", device],
                  capture=True),
         ]
         self.mock_util.subp.assert_has_calls(expected_calls)
-        self.assertEqual(is_container, "/dev/md/imsm0")
+        self.assertEqual(is_in_container, True)
 
 class TestBlockMdadmZeroDevice(CiTestCase):
 
