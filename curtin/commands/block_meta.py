@@ -1492,7 +1492,8 @@ def raid_handler(info, storage_config):
     if not devices and not container:
         raise ValueError("devices or container for raid must be specified")
     if raidlevel not in ['linear', 'raid0', 0, 'stripe', 'raid1', 1, 'mirror',
-                         'raid4', 4, 'raid5', 5, 'raid6', 6, 'raid10', 10, 'container']:
+                         'raid4', 4, 'raid5', 5, 'raid6', 6, 'raid10', 10,
+                         'container']:
         raise ValueError("invalid raidlevel '%s'" % raidlevel)
     if raidlevel in ['linear', 'raid0', 0, 'stripe', 'container']:
         if spare_devices:
@@ -1506,7 +1507,7 @@ def raid_handler(info, storage_config):
         container_dev = get_path_to_storage_volume(container, storage_config)
     else:
         device_paths = list(get_path_to_storage_volume(dev, storage_config) for
-                    dev in devices)
+                            dev in devices)
         LOG.debug('raid: device path mapping: {}'.format(
             zip(devices, device_paths)))
 

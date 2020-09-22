@@ -271,8 +271,10 @@ class TestBlockMdadmCreate(CiTestCase):
             '/dev/nvme0n1', '/dev/nvme1n1', '/dev/nvme2n1', '/dev/nvme3n1'
         ]
         mdadm.mdadm_create(md_devname=md_devname, raidlevel=raidlevel,
-                           devices=devices, spares=spares, container=container, metadata=metadata)
+                           devices=devices, spares=spares,
+                           container=container, metadata=metadata)
         self.mock_util.subp.assert_has_calls(expected_calls)
+
 
 class TestBlockMdadmExamine(CiTestCase):
     def setUp(self):

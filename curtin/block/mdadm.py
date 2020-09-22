@@ -146,8 +146,8 @@ def mdadm_assemble(md_devname=None, devices=[], spares=[], scan=False,
     udev.udevadm_settle()
 
 
-def mdadm_create(md_devname, raidlevel, devices, spares=None, container=None, md_name="",
-                 metadata=None):
+def mdadm_create(md_devname, raidlevel, devices, spares=None, container=None,
+                 md_name="", metadata=None):
     LOG.debug('mdadm_create: ' +
               'md_name=%s raidlevel=%s ' % (md_devname, raidlevel) +
               ' devices=%s spares=%s name=%s' % (devices, spares, md_name))
@@ -160,9 +160,11 @@ def mdadm_create(md_devname, raidlevel, devices, spares=None, container=None, md
         raise ValueError('Invalid raidlevel: [{}]'.format(raidlevel))
 
     min_devices = md_minimum_devices(raidlevel)
-    devcnt = len(devices) if not container else len(md_get_devices_list(container))
+    devcnt = len(devices) if not container else \
+        len(md_get_devices_list(container))
     if devcnt < min_devices:
-        err = 'Not enough devices (' + str(devcnt) + ') for raidlevel: ' + str(raidlevel)
+        err = 'Not enough devices (' + str(devcnt) + ') '
+        err += 'for raidlevel: ' + str(raidlevel)
         err += ' minimum devices needed: ' + str(min_devices)
         raise ValueError(err)
 
@@ -359,6 +361,7 @@ def mdadm_remove(devpath):
                          rcs=[0], capture=True)
     LOG.debug("mdadm remove:\n%s\n%s", out, err)
 
+
 def fail_device(mddev, arraydev):
     assert_valid_devpath(mddev)
 
@@ -516,7 +519,8 @@ def md_sysfs_attr(md_devname, attrname):
 
 
 def md_raidlevel_short(raidlevel):
-    if isinstance(raidlevel, int) or raidlevel in ['linear', 'stripe', 'container']:
+    if isinstance(raidlevel, int) or \
+       raidlevel in ['linear', 'stripe', 'container']:
         return raidlevel
 
     return int(raidlevel.replace('raid', ''))
@@ -612,7 +616,7 @@ def __mdadm_detail_to_dict(input):
     remainder = input[input.find('\n')+1:]
 
     # keep only the first section (imsm container)
-    arraysection = remainder.find('\n[');
+    arraysection = remainder.find('\n[')
     if arraysection != -1:
         remainder = remainder[:arraysection]
 
@@ -849,6 +853,7 @@ def md_check(md_devname, raidlevel, devices=[], spares=[]):
 
     LOG.debug('RAID array OK: ' + md_devname)
     return True
+
 
 def md_is_in_container(md_devname):
     return 'MD_CONTAINER' in mdadm_query_detail(md_devname)

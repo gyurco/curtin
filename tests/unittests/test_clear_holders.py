@@ -265,17 +265,18 @@ class TestClearHolders(CiTestCase):
     @mock.patch('curtin.block.clear_holders.LOG')
     @mock.patch('curtin.block.clear_holders.mdadm')
     def test_shutdown_mdadm_in_container(self, mock_mdadm, mock_log, mock_util,
-                            mock_time, mock_sysdev, mock_path, mock_wipe):
+                                         mock_time, mock_sysdev, mock_path,
+                                         mock_wipe):
         """test clear_holders.shutdown_mdadm"""
         devices = ['/dev/wda1', '/dev/wda2']
         spares = ['/dev/wdb1']
-        md_devs = (devices + spares)
         mock_sysdev.return_value = self.test_blockdev
         mock_path.return_value = self.test_blockdev
         mock_mdadm.md_present.return_value = False
         mock_mdadm.md_get_devices_list.return_value = devices
         mock_mdadm.md_get_spares_list.return_value = spares
-        mock_mdadm.mdadm_query_detail.return_value = {'MD_CONTAINER':'/dev/md/imsm0'}
+        mock_mdadm.mdadm_query_detail.return_value = \
+            {'MD_CONTAINER': '/dev/md/imsm0'}
 
         clear_holders.shutdown_mdadm(self.test_syspath)
 
